@@ -122,7 +122,7 @@ namespace DocApi.DataLayer
                                 adm2.installment = Convert.ToString(UtilityDL.CheckNull<Int32>(reader["INSTALLMENT"]));                                                                
                                 adm2.session = UtilityDL.CheckNull<string>(reader["SESSION"]);                                                              
                                 adm2.type = UtilityDL.CheckNull<string>(reader["TYPE"]);                                                
-                                adm2.cls = Convert.ToString(UtilityDL.CheckNull<Int32>(reader["CLASS"]));                                                                  
+                                adm2.cls = Convert.ToString(UtilityDL.CheckNull<string>(reader["CLASS"]));                                                                  
                                 adm2.head = UtilityDL.CheckNull<string>(reader["HEAD"]);                                                              
                                 adm2.stream = UtilityDL.CheckNull<string>(reader["STREAM"]);                                                                
                                 adm2.amount = Convert.ToString(UtilityDL.CheckNull<Int32>(reader["AMOUNT"]));                                                          
