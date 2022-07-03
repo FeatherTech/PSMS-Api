@@ -209,6 +209,7 @@ namespace DocApi.DataLayer
         internal string InsertAdmissionAndPayment(ADMDM adm)
         {
             string _section = null;
+            string _ret=null;
 
             using (var connection = MySqlDbConnection.NewConnection)
             {
@@ -223,7 +224,23 @@ namespace DocApi.DataLayer
                         (adm.student.adm_purpose=="FEESCOLLECTION" || adm.student.adm_purpose=="PROMOTE" || adm.student.adm_purpose=="NEWADMISSION"))
                             InsertStudentPayment(connection, adm.studentpayment,regNo);
                         transaction.Commit();
-                        return regNo;
+                        if (adm.student.adm_purpose=="FEESCOLLECTION" && regNo=="0" )
+                            _ret="Fees Colloection Saved Successfully !!!";
+                        else if (adm.student.adm_purpose=="FEESCOLLECTION" && regNo=="1" )
+                            _ret="The Student is not registered !!!!";
+                        else if (adm.student.adm_purpose=="PROMOTE" && regNo!="1" )
+                            _ret="Student Promoted to next level" + regNo;
+                        else if (adm.student.adm_purpose=="PROMOTE" && regNo=="1" )
+                            _ret="The Student is not registered !!!!";
+                        else if (adm.student.adm_purpose=="NEWADMISSION" && regNo!="1" )
+                            _ret="Student Registered Sucessfully Regn# "+ regNo;
+                        else if (adm.student.adm_purpose=="NEWADMISSION" && regNo=="1" )
+                            _ret="The Student is already registered !!!!";
+                        else if (adm.student.adm_purpose=="LEAVESCHOOL" && regNo=="0" )
+                            _ret="Student Information Deleted !!!";
+                        else
+                            _ret="Error While Saving Data !!!!";
+                        return _ret;
                     }
                     catch (Exception ex)
                     {
