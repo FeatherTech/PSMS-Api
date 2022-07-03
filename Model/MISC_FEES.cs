@@ -10,6 +10,7 @@ namespace DocApi.Models
        public string head            {get;set;}
 public string amount          {get;set;}
 public string del_flag        {get;set;}
+public string con_flag        {get;set;}
 public string orgl_user       {get;set;}
 public string orgl_stamp      {get;set;}
 public string updt_user       {get;set;}

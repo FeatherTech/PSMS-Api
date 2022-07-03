@@ -64,6 +64,13 @@ namespace PSMSWebApi.Controllers
         {
            return _ll.UpdateAdmission(tdt);
         }
+
+        [Route("InsertAdmissionAndPayment")]
+        [HttpPost]
+        public string InsertAdmissionAndPayment([FromBody] ADMDM tdt)
+        {
+           return _ll.InsertAdmissionAndPayment(tdt);
+        }
      
     }
 }

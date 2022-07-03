@@ -12,7 +12,7 @@ namespace PSMSWebApi.Config
     {
         //Startup startup=new Startup(IConfiguration configuration);
 
-        static string connectionString = "Server=213.175.201.201; Database=PSMS_DEV; Uid=psms_dev_usr; Pwd=signature";
+        static string connectionString = "Server=213.175.201.201; Database=PSMS_DEV; Uid=psms_dev_usr; Pwd=signature; IgnoreCommandTransaction=true;";
         //static string dbConn = Startup.Configuration.GetSection("MySettings").GetSection("DbConnection").Value;
         
         //static string connectionString = Configuration["ConnectionStrings:DefaultConnection"];

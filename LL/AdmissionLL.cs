@@ -31,6 +31,10 @@ namespace DocApi.LogicLayer
         {
            return  _dac.UpdateAdmission(adm);
         }
+        internal string InsertAdmissionAndPayment(ADMDM adm)
+        {
+        return _dac.InsertAdmissionAndPayment(adm);
+        }
         
         
     }

@@ -19,9 +19,13 @@ public string email           {get;set;}
 public string gurdain_name    {get;set;}
 public string phone2          {get;set;}
 public string del_flag        {get;set;}
+public string last_installment {get;set;} 
+public string last_installment_dt {get;set;}
 public string orgl_user       {get;set;}
 public string orgl_stamp      {get;set;}
 public string updt_user       {get;set;}
 public string updt_stamp      {get;set;}
+public string adm_id {get;set;}
+public string adm_purpose {get;set;}
          }
 }

@@ -5,13 +5,236 @@ using MySql.Data.MySqlClient;
 using System.Data;
 using PSMSWebApi.Config;
 using DocApi.DataLayer;
+using System.Data.Common;
+using System.IO;
+using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Configuration;
 
 namespace DocApi.DataLayer
 {
     internal sealed class AdmissionDL
     {
         string _statement;
+
+        internal string InsertStudent(DbConnection connection, STUDENT std)
+        {
+            string _query = " INSERT INTO STUDENT ( ADM_ID,REGN_NO,NAME,SESSION,CLASS,STREAM,ROLL,ADDRESS,PHONE1,EMAIL "          
+                        +"   ,GURDAIN_NAME,PHONE2,DEL_FLAG,LAST_INSTALLMENT,LAST_INSTALMENT_DT "
+                        +"  ,ORGL_USER,ORGL_STAMP,UPDT_USER,UPDT_STAMP) "
+                           + " VALUES({0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},'N',{12},SYSDATE(),{13}, SYSDATE(),{14},SYSDATE())";
+
+            _statement = string.Format(_query,
+            string.Concat("'", std.adm_id, "'"),
+            string.Concat("'",std.regn_no, "'"),
+            string.Concat("'", std.name, "'"),
+            string.Concat("'", std.session, "'"),
+            string.Concat("'", std.cls, "'"),
+            string.Concat("'", std.stream, "'"),
+            string.Concat("'", std.roll, "'"),
+            string.Concat("'", std.address, "'"),
+            string.Concat("'", std.phone1, "'"),
+            string.Concat("'", std.email, "'"),
+            string.Concat("'", std.gurdain_name, "'"),
+            string.Concat("'", std.phone2, "'"),
+            string.Concat("'", std.last_installment, "'"),
+            string.Concat("'", std.orgl_user, "'"),
+            string.Concat("'", std.updt_user, "'")
+            );
+
+            using (var command = MySqlDbConnection.Command(connection, _statement))
+            {
+                command.ExecuteNonQuery();
+            }
+            return std.regn_no;
+        }
+
+       internal bool InsertStudentPayment(DbConnection connection, List<STUDENT_PAYMENT> nom,string regNo)
+        {
             
+            string _query = " INSERT INTO STUDENT_PAYMENT ( REGN_NO,SESSION,CLASS,STREAM,TYPE,INSTALLMENT,HEAD,AMOUNT,DEL_FLAG,ORGL_USER,ORGL_STAMP"
+                 +" ,UPDT_USER,UPDT_STAMP ) "
+                  + " VALUES({0},{1},{2},{3},{4},{5},{6},{7},'N',{8},SYSDATE(),{9},SYSDATE())";
+            for (int i = 0; i < nom.Count; i++)
+            {
+                _statement = string.Format(_query,
+                                                  string.Concat("'", regNo , "'"),
+                                                  string.Concat("'", nom[i].session, "'"),
+                                                  string.Concat("'", nom[i].cls, "'"),
+                                                  string.Concat("'", nom[i].stream, "'"),
+                                                  string.Concat("'", nom[i].type, "'"),
+                                                  string.Concat("'", nom[i].installment, "'"),
+                                                  string.Concat("'", nom[i].head, "'"),
+                                                  string.Concat("'", nom[i].amount, "'"),
+                                                  string.Concat("'", nom[i].orgl_user, "'"),
+                                                  string.Concat("'", nom[i].updt_user, "'")
+                                                   );
+
+                using (var command = MySqlDbConnection.Command(connection, _statement))
+                {
+                    command.ExecuteNonQuery();
+                }
+            }
+            return true;
+        }
+
+
+
+
+        internal string CheckNewAdmission(DbConnection connection, STUDENT std)
+        {
+            int alreadyRegistered = 0;
+            string regnNo="";
+            if(std.adm_purpose=="NEWADMISSION")
+            {
+            string _query = "Select COUNT(regn_no) regn_no_cnt,MAX(regn_no) regn_no"
+                            + " From   student"
+                            + " Where  adm_id =  {0} ";
+            _statement = string.Format(_query,
+                                            string.IsNullOrWhiteSpace(std.adm_id) ? "adm_id" : string.Concat("'", std.adm_id, "'")
+                                            );
+            using (var command = MySqlDbConnection.Command(connection, _statement))
+            {
+                using (var reader = command.ExecuteReader())
+                {
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            alreadyRegistered = Convert.ToInt32(UtilityDL.CheckNull<Int64>(reader["regn_no_cnt"]));
+                            regnNo = UtilityDL.CheckNull<string>(reader["regn_no"]);
+                        }
+                    }
+                }
+            }
+            if (alreadyRegistered>0)
+            {
+                return "1";
+               // return "The Strudent is already registered !!!! Regn#"+regnNo;
+                
+            }
+            else
+            {
+                  std.regn_no = string.Concat("RG", std.adm_id);
+                  string newRegnNo =  InsertStudent(connection, std);
+                  return newRegnNo;
+            }
+            }
+            else if (std.adm_purpose=="PROMOTE")
+            {
+                string _query = "Select COUNT(regn_no) regn_no_cnt,MAX(regn_no) regn_no"
+                            + " From   student"
+                            + " Where  regn_no =  {0} ";
+            _statement = string.Format(_query,
+                                            string.IsNullOrWhiteSpace(std.regn_no) ? "regn_no" : string.Concat("'", std.regn_no, "'")
+                                            );
+            using (var command = MySqlDbConnection.Command(connection, _statement))
+            {
+                using (var reader = command.ExecuteReader())
+                {
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            alreadyRegistered = Convert.ToInt32(UtilityDL.CheckNull<Int64>(reader["regn_no_cnt"]));
+                            regnNo = UtilityDL.CheckNull<string>(reader["regn_no"]);
+                        }
+                    }
+                }
+            }
+            if (alreadyRegistered>0)
+            {
+                string newRegnNo =  InsertStudent(connection, std);
+                return newRegnNo;
+            }
+            else
+            {
+                return "1";
+                //return "The Strudent is not registered !!!! Regn#"+regnNo;  
+                
+            }
+
+            }
+            else if (std.adm_purpose=="LEAVESCHOOL")
+            {
+               string _query = "update student set del_flag='N', updt_stamp = SYSDATE(),updt_user={0} "
+                            + " Where  regn_no =  {1} ";
+                  _statement = string.Format(_query,
+                                            string.IsNullOrWhiteSpace(std.updt_user) ? "updt_user" : string.Concat("'", std.updt_user, "'"),
+                                            string.IsNullOrWhiteSpace(std.regn_no) ? "regn_no" : string.Concat("'", std.regn_no, "'")
+                                            );
+             using (var command = MySqlDbConnection.Command(connection, _statement))
+            {
+                command.ExecuteNonQuery();
+            }
+            return "0";   
+            }
+            else if (std.adm_purpose=="FEESCOLLECTION")
+            {
+                string _query = "Select COUNT(regn_no) regn_no_cnt,MAX(regn_no) regn_no"
+                            + " From   student"
+                            + " Where  regn_no =  {0} ";
+            _statement = string.Format(_query,
+                                            string.IsNullOrWhiteSpace(std.regn_no) ? "regn_no" : string.Concat("'", std.regn_no, "'")
+                                            );
+            using (var command = MySqlDbConnection.Command(connection, _statement))
+            {
+                using (var reader = command.ExecuteReader())
+                {
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            alreadyRegistered = Convert.ToInt32(UtilityDL.CheckNull<Int64>(reader["regn_no_cnt"]));
+                            regnNo = UtilityDL.CheckNull<string>(reader["regn_no"]);
+                        }
+                    }
+                }
+            }
+            if (alreadyRegistered>0)
+            {
+                return "0";
+            }
+            else
+            {
+                return "1";
+                //return "The Strudent is not registered !!!! Regn#"+regnNo; 
+                
+            }
+
+
+            }
+             return "ERR";
+        }
+       
+        internal string InsertAdmissionAndPayment(ADMDM adm)
+        {
+            string _section = null;
+
+            using (var connection = MySqlDbConnection.NewConnection)
+            {
+                using (var transaction = connection.BeginTransaction())
+                {
+                    try
+                    {
+                        _section = "CheckNewAdmission";
+                        string regNo = CheckNewAdmission(connection, adm.student);
+                        _section = "InsertStudentPayment";
+                        if (adm.studentpayment.Count > 0 && regNo != "1" &&
+                        (adm.student.adm_purpose=="FEESCOLLECTION" || adm.student.adm_purpose=="PROMOTE" || adm.student.adm_purpose=="NEWADMISSION"))
+                            InsertStudentPayment(connection, adm.studentpayment,regNo);
+                        transaction.Commit();
+                        return regNo;
+                    }
+                    catch (Exception ex)
+                    {
+                        transaction.Rollback();
+                        return _section + " : " + ex.Message;
+                    }
+
+                }
+            }
+        }  
+
         internal string GetMySqlHealth()
         {
             string ret = null;
@@ -40,16 +263,17 @@ namespace DocApi.DataLayer
             var fees = new List<MISC_FEES>();                                                                                                          
             using (var connection = MySqlDbConnection.NewConnection)                                                                                        
             {                                                                                                                                               
-                string query= " SELECT                      "                                                                                               
-+ " HEAD      ,"                                                                                                                 
-+ " AMOUNT    ,"                                                                                                                 
-+ " DEL_FLAG  ,"                                                                                                                 
-+ " ORGL_USER ,"                                                                                                                 
-+ " ORGL_STAMP,"                                                                                                                 
-+ " UPDT_USER ,"                                                                                                                 
-+ " UPDT_STAMP"                                                                                                       
-+ " FROM MISC_FEES   "                                                                                                                           
-+ " WHERE DEL_FLAG   = 'N'     ";                                                                                                                            
+            string query= " SELECT                      "                                                                                               
+            + " HEAD      ,"                                                                                                                 
+            + " AMOUNT    ,"                                                                                                                 
+            + " DEL_FLAG  ," 
+            + " CON_FLAG  ,"                                                                                                                  
+            + " ORGL_USER ,"                                                                                                                 
+            + " ORGL_STAMP,"                                                                                                                 
+            + " UPDT_USER ,"                                                                                                                 
+            + " UPDT_STAMP"                                                                                                       
+            + " FROM MISC_FEES   "                                                                                                                           
+            + " WHERE DEL_FLAG   = 'N'     ";                                                                                                                            
                 _statement = string.Format(query);                                                                                                                
                                                                                                                                                             
                 using (var command = MySqlDbConnection.Command(connection, _statement))                                                                     
@@ -64,6 +288,7 @@ namespace DocApi.DataLayer
                                                                                                                                                             
                                 adm2.head = UtilityDL.CheckNull<string>(reader["HEAD"]);                                                             
                                 adm2.amount = Convert.ToString(UtilityDL.CheckNull<Int32>(reader["AMOUNT"]));                                                                
+                                adm2.con_flag = UtilityDL.CheckNull<string>(reader["CON_FLAG"]);                                                              
                                 adm2.del_flag = UtilityDL.CheckNull<string>(reader["DEL_FLAG"]);                                                              
                                 fees.Add(adm2);                                                                                                        
                             }                                                                                                                               
@@ -80,12 +305,12 @@ namespace DocApi.DataLayer
             using (var connection = MySqlDbConnection.NewConnection)                                                                                        
             {                                                                                                                                               
                 string query= " SELECT                      "                                                                                               
-+ " SESSION      ,"                                                                                                                 
-+ " CLASS        ,"                                                                                                                 
-+ " STREAM       ,"                                                                                                                 
-+ " TYPE         ,"                                                                                                                 
-+ " INSTALLMENT  ,"                                                                                                                 
-+ " HEAD         ,"                                                                                                                 
+                + " SESSION      ,"                                                                                                                 
+                + " CLASS        ,"                                                                                                                 
+                + " STREAM       ,"                                                                                                                 
+                + " TYPE         ,"                                                                                                                 
+                + " INSTALLMENT  ,"                                                                                                                 
+                + " HEAD         ,"                                                                                                                 
 + " AMOUNT       ,"                                                                                                                 
 + " SERIAL       ,"                                                                                                                 
 + " DEL_FLAG     ,"                                                                                                                 
