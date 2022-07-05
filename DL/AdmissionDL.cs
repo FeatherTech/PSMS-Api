@@ -52,8 +52,8 @@ namespace DocApi.DataLayer
         {
             
             string _query = " INSERT INTO STUDENT_PAYMENT ( REGN_NO,SESSION,CLASS,STREAM,TYPE,INSTALLMENT,HEAD,AMOUNT,DEL_FLAG,ORGL_USER,ORGL_STAMP"
-                 +" ,UPDT_USER,UPDT_STAMP ) "
-                  + " VALUES({0},{1},{2},{3},{4},{5},{6},{7},'N',{8},SYSDATE(),{9},SYSDATE())";
+                 +" ,UPDT_USER,UPDT_STAMP,PAY_TYPE ) "
+                  + " VALUES({0},{1},{2},{3},{4},{5},{6},{7},'N',{8},SYSDATE(),{9},SYSDATE(),{10})";
             for (int i = 0; i < nom.Count; i++)
             {
                 _statement = string.Format(_query,
@@ -66,7 +66,8 @@ namespace DocApi.DataLayer
                                                   string.Concat("'", nom[i].head, "'"),
                                                   string.Concat("'", nom[i].amount, "'"),
                                                   string.Concat("'", nom[i].orgl_user, "'"),
-                                                  string.Concat("'", nom[i].updt_user, "'")
+                                                  string.Concat("'", nom[i].updt_user, "'"),
+                                                  string.Concat("'", nom[i].pay_type, "'")
                                                    );
 
                 using (var command = MySqlDbConnection.Command(connection, _statement))

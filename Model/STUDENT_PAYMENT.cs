@@ -14,6 +14,7 @@ public string stream          {get;set;}
 public string type            {get;set;}
 public string installment     {get;set;}
 public string head            {get;set;}
+public string pay_type         {get;set;}
 public string amount          {get;set;}
 public string del_flag        {get;set;}
 public string orgl_user       {get;set;}
